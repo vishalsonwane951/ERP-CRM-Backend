@@ -1,0 +1,2461 @@
+{
+  "info": {
+    "name": "Muster ERP API",
+    "description": "Run '1. Auth > Login as ...' first. Each login saves the token; switch user by running another login. Seeded password for all users: Passw0rd!",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": "emp_sanjay"
+    },
+    {
+      "key": "newEmpId",
+      "value": ""
+    },
+    {
+      "key": "deptId",
+      "value": ""
+    },
+    {
+      "key": "leaveTypeId",
+      "value": "lt_casual"
+    },
+    {
+      "key": "leaveFrom",
+      "value": "2026-12-07"
+    },
+    {
+      "key": "leaveTo",
+      "value": "2026-12-09"
+    },
+    {
+      "key": "reqId",
+      "value": ""
+    },
+    {
+      "key": "approvalId",
+      "value": "lr_seed01"
+    },
+    {
+      "key": "assetId",
+      "value": "as_laptop1"
+    },
+    {
+      "key": "documentId",
+      "value": ""
+    },
+    {
+      "key": "docKey",
+      "value": ""
+    },
+    {
+      "key": "uploadUrl",
+      "value": ""
+    },
+    {
+      "key": "docFilename",
+      "value": "passport.pdf"
+    },
+    {
+      "key": "period",
+      "value": "2026-09"
+    },
+    {
+      "key": "month",
+      "value": "2026-10"
+    },
+    {
+      "key": "date",
+      "value": "2026-10-12"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login as HR admin (Meera)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"meera@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded HR_ADMIN. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Login as Manager (Kavya)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"kavya@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded MANAGER. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Login as Employee (Sanjay)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sanjay@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded EMPLOYEE. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Login as Employee (Ananya)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ananya@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded EMPLOYEE. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Login as Finance (Rohan)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rohan@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded FINANCE. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Login as Auditor (Nisha)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nisha@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded AUDITOR. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Login as Super admin (Arjun)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"arjun@kestrel.test\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nSigns in as the seeded SUPER_ADMIN. The test script saves `token` and `refreshToken` as collection variables, so every other request is automatically authorized as this user.\n\n**Errors:** 401 wrong email or password. 403 account inactive. 422 missing field."
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set('token', d.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Public\n\nExchanges the refresh token (valid 7 days) for a new access token (valid 15 minutes). The role is re-read from the database, so a role change takes effect here.\n\n**Errors:** 401 refresh token invalid or expired."
+          }
+        },
+        {
+          "name": "Who am I",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nReturns the signed-in user's profile."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Organization",
+      "item": [
+        {
+          "name": "Get my organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/organizations/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizations",
+                "me"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nCompany name, timezone, shift times and attendance rules."
+          }
+        },
+        {
+          "name": "Update attendance settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shiftStart\": \"09:30\",\n  \"shiftEnd\": \"18:30\",\n  \"graceMinutes\": 10,\n  \"halfDayAfterMinutes\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/organizations/policy",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizations",
+                "policy"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN\n\nChanges shift times and attendance rules. All fields are optional. Add `geofence` ({lat, lng, radiusMeters}) to require check-ins from the office; leave it out to allow check-in from anywhere.\n\n**Errors:** 403 not HR admin."
+          }
+        },
+        {
+          "name": "List departments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/organizations/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizations",
+                "departments"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nAll departments."
+          }
+        },
+        {
+          "name": "Add department",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set('deptId', pm.response.json().data.deptId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sales\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/organizations/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizations",
+                "departments"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER\n\nCreates a department. Saves `deptId`."
+          }
+        },
+        {
+          "name": "List leave types",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/organizations/leave-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizations",
+                "leave-types"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nAll leave types and their yearly days."
+          }
+        },
+        {
+          "name": "Add leave type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Paternity leave\",\n  \"annualDays\": 10,\n  \"color\": \"#2E8B57\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/organizations/leave-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "organizations",
+                "leave-types"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN\n\nCreates a leave type. Existing employees do not get a balance for it automatically; new employees do."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Employees",
+      "item": [
+        {
+          "name": "List people",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.collectionVariables.set('employeeId', (pm.response.json().data[0] || {}).empId || pm.collectionVariables.get('employeeId'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees?q=sanjay&status=ACTIVE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "sanjay",
+                  "description": "Search name, email, code or title"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "ACTIVE or INACTIVE"
+                }
+              ]
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER, FINANCE, AUDITOR see everyone. MANAGER sees direct reports only.\n\nSearch and filter. A manager can never see another team.\n\n**Errors:** 403 for EMPLOYEE."
+          }
+        },
+        {
+          "name": "Get one person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "{{employeeId}}"
+              ],
+              "query": []
+            },
+            "description": "**Who:** The person themselves, their manager, HR, finance, auditor\n\nSalary is shown to the person, HR, finance and auditor. Bank account and national ID are shown only to the person and HR admin.\n\n**Errors:** 403 not allowed to view. 404 unknown id."
+          }
+        },
+        {
+          "name": "Create person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set('newEmpId', pm.response.json().data.employee.empId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tara Menon\",\n  \"email\": \"tara@kestrel.test\",\n  \"phone\": \"+91 9800000000\",\n  \"role\": \"EMPLOYEE\",\n  \"deptId\": \"dept_eng\",\n  \"designation\": \"Logistics Analyst\",\n  \"managerId\": \"emp_kavya\",\n  \"joinDate\": \"2026-10-01\",\n  \"salary\": {\n    \"basic\": 50000,\n    \"hra\": 20000,\n    \"allowances\": 10000\n  },\n  \"bankAccount\": \"123456789012\",\n  \"nationalId\": \"ABCDE1234F\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/employees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER\n\nAdds a person, creates their login and gives them every leave type's yearly balance. Returns a one-time `tempPassword`. Saves `newEmpId`.\n\n**Errors:** 409 email already exists. 422 missing field or bad role."
+          }
+        },
+        {
+          "name": "Update person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Senior Analyst\",\n  \"phone\": \"+91 9811111111\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{newEmpId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "employees",
+                "{{newEmpId}}"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER (role, salary, bankAccount, nationalId: HR_ADMIN only)\n\nSend only the fields to change. `managerId: null` removes the manager.\n\n**Errors:** 403 HR manager changing role/salary/bank/ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Attendance",
+      "item": [
+        {
+          "name": "Today (my status)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "today"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nToday's date, server time, shift, rules and my record (`null` if not checked in)."
+          }
+        },
+        {
+          "name": "Check in",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 18.5204,\n  \"lng\": 73.8567,\n  \"deviceId\": \"postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/check-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "check-in"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nMarks you in. Status is PRESENT (within grace), LATE, or HALF_DAY (past the half-day cut-off). One check-in per day: a second attempt returns 409. `lat`/`lng` are required only if a geofence is configured.\n\n**Errors:** 409 already checked in. 400/422 location rules."
+          }
+        },
+        {
+          "name": "Check out",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/check-out",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "check-out"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nMarks you out and records minutes worked.\n\n**Errors:** 400 not checked in. 409 already checked out."
+          }
+        },
+        {
+          "name": "My month",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/me?month={{month}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "{{month}}",
+                  "description": "YYYY-MM"
+                }
+              ]
+            },
+            "description": "**Who:** Any signed-in user\n\nMy daily records and totals for a month (defaults to this month)."
+          }
+        },
+        {
+          "name": "Team or company, one day",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/org?date={{date}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "org"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{date}}",
+                  "description": "YYYY-MM-DD, defaults to today"
+                }
+              ]
+            },
+            "description": "**Who:** MANAGER (team), HR_ADMIN, HR_MANAGER, AUDITOR (everyone)\n\nOne row per active person for the date. Status: PRESENT, LATE, HALF_DAY, ABSENT (past day, no record), NOT_YET (today, not in yet).\n\n**Errors:** 403 for EMPLOYEE, FINANCE."
+          }
+        },
+        {
+          "name": "One person's month",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/employee/{{employeeId}}?month={{month}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "employee",
+                "{{employeeId}}"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "{{month}}",
+                  "description": "YYYY-MM"
+                }
+              ]
+            },
+            "description": "**Who:** The person, their manager, HR, finance, auditor\n\nSame shape as 'My month' for someone else.\n\n**Errors:** 403 not allowed."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Leave",
+      "item": [
+        {
+          "name": "My balances and requests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.collectionVariables.set('leaveTypeId', (pm.response.json().data.balances[0] || {}).typeId || 'lt_casual');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leaves/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leaves",
+                "me"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nLeave balances (with `available`) and my requests. Saves `leaveTypeId`."
+          }
+        },
+        {
+          "name": "Request leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set('reqId', pm.response.json().data.reqId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeId\": \"{{leaveTypeId}}\",\n  \"from\": \"{{leaveFrom}}\",\n  \"to\": \"{{leaveTo}}\",\n  \"reason\": \"Family function\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leaves/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leaves",
+                "requests"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nWeekends are not counted. The days are held (`pending`) until a decision. Goes to the manager, then HR admin. Saves `reqId`.\n\n**Errors:** 400 not enough balance, bad dates, or only weekend days."
+          }
+        },
+        {
+          "name": "Cancel my request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leaves/requests/{{reqId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leaves",
+                "requests",
+                "{{reqId}}",
+                "cancel"
+              ],
+              "query": []
+            },
+            "description": "**Who:** The person who requested\n\nWithdraws a request that is still open and releases the held days.\n\n**Errors:** 409 already decided. 404 not yours."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Approvals",
+      "item": [
+        {
+          "name": "My inbox (waiting on me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "pm.collectionVariables.set('approvalId', (pm.response.json().data[0] || {}).reqId || pm.collectionVariables.get('approvalId'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approvals/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "approvals",
+                "pending"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nRequests waiting for this user: as the named manager, or through their role (HR admin, finance). Saves the first one as `approvalId`."
+          }
+        },
+        {
+          "name": "History by status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approvals?status=APPROVED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "approvals"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "APPROVED",
+                  "description": "APPROVED, REJECTED, CANCELLED or PENDING"
+                }
+              ]
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER, AUDITOR\n\nDecided or open requests across the company.\n\n**Errors:** 403 other roles. 422 bad status."
+          }
+        },
+        {
+          "name": "Request detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/approvals/{{approvalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "approvals",
+                "{{approvalId}}"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Requester, their manager, anyone who acted, HR, auditor, current approver\n\nThe request, its stages, history and `canAct` (true if the caller can decide it now).\n\n**Errors:** 403 / 404."
+          }
+        },
+        {
+          "name": "Approve",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"approve\",\n  \"comment\": \"Enjoy the break\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approvals/{{approvalId}}/act",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "approvals",
+                "{{approvalId}}",
+                "act"
+              ],
+              "query": []
+            },
+            "description": "**Who:** The current approver (manager, or role holder). Never the requester.\n\nApproves the current stage. After the last stage the request becomes APPROVED and the leave days are used (or the expense marked approved). Use ONE of Approve / Reject / Escalate per request. For the seeded request lr_seed01: first run 'Login as Manager (Kavya)' (stage 1), then 'Login as HR admin (Meera)' (stage 2).\n\n**Errors:** 403 not your turn or your own request. 409 already decided. 422 reject without a comment."
+          }
+        },
+        {
+          "name": "Reject",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"reject\",\n  \"comment\": \"Release week, please reschedule\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approvals/{{approvalId}}/act",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "approvals",
+                "{{approvalId}}",
+                "act"
+              ],
+              "query": []
+            },
+            "description": "**Who:** The current approver (manager, or role holder). Never the requester.\n\nRejects and ends the request. A comment is required. Held leave days are released. Use ONE of Approve / Reject / Escalate per request. For the seeded request lr_seed01: first run 'Login as Manager (Kavya)' (stage 1), then 'Login as HR admin (Meera)' (stage 2).\n\n**Errors:** 403 not your turn or your own request. 409 already decided. 422 reject without a comment."
+          }
+        },
+        {
+          "name": "Escalate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"escalate\",\n  \"comment\": \"Need HR to decide\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/approvals/{{approvalId}}/act",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "approvals",
+                "{{approvalId}}",
+                "act"
+              ],
+              "query": []
+            },
+            "description": "**Who:** The current approver (manager, or role holder). Never the requester.\n\nHands the request to the next role up (HR admin, or Admin if already with HR). Use ONE of Approve / Reject / Escalate per request. For the seeded request lr_seed01: first run 'Login as Manager (Kavya)' (stage 1), then 'Login as HR admin (Meera)' (stage 2).\n\n**Errors:** 403 not your turn or your own request. 409 already decided. 422 reject without a comment."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Expenses",
+      "item": [
+        {
+          "name": "My expenses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nMy expense claims, newest first."
+          }
+        },
+        {
+          "name": "Submit expense",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set('approvalId', pm.response.json().data.reqId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Travel\",\n  \"amount\": 4850,\n  \"date\": \"2026-10-08\",\n  \"description\": \"Client site visit, cab Pune to Nashik\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nCreates a claim and sends it to the manager, then Finance. Saves `approvalId` so you can act on it.\n\n**Errors:** 422 bad category (Travel, Meals, Equipment, Software, Other) or amount."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Payroll",
+      "item": [
+        {
+          "name": "List runs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/runs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payroll",
+                "runs"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER, FINANCE, AUDITOR\n\nPayroll months, newest first. Status: DRAFT, PROCESSING (calculated), FINALIZED (locked)."
+          }
+        },
+        {
+          "name": "Start a run",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"period\": \"{{period}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payroll/runs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payroll",
+                "runs"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, FINANCE\n\nCreates a draft run for a month.\n\n**Errors:** 409 run already exists. 422 bad period."
+          }
+        },
+        {
+          "name": "Calculate run",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/runs/{{period}}/process",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payroll",
+                "runs",
+                "{{period}}",
+                "process"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, FINANCE\n\nWorks out pay for every active person from attendance and approved leave. Can be repeated until the run is locked. (Pay rules are examples; replace with your own.)\n\n**Errors:** 404 no such run. 409 already locked."
+          }
+        },
+        {
+          "name": "Lock run",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/runs/{{period}}/finalize",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payroll",
+                "runs",
+                "{{period}}",
+                "finalize"
+              ],
+              "query": []
+            },
+            "description": "**Who:** FINANCE\n\nLocks the run so it can never change; payslips become visible to employees. Only works once, and only after calculating.\n\n**Errors:** 409 not calculated yet, or already locked. 403 not finance."
+          }
+        },
+        {
+          "name": "Run lines",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/runs/{{period}}/lines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payroll",
+                "runs",
+                "{{period}}",
+                "lines"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER, FINANCE, AUDITOR\n\nEvery person's pay line for the run."
+          }
+        },
+        {
+          "name": "My payslips",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/payslips/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payroll",
+                "payslips",
+                "me"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nMy own payslips, only for locked months."
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Assets",
+      "item": [
+        {
+          "name": "List equipment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assets"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR, finance, auditor see all. Others see only what is assigned to them.\n\nEquipment inventory."
+          }
+        },
+        {
+          "name": "My equipment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assets/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assets",
+                "mine"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nEquipment assigned to me."
+          }
+        },
+        {
+          "name": "Add equipment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set('assetId', pm.response.json().data.assetId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tag\": \"KL-PH-0007\",\n  \"name\": \"Pixel 8\",\n  \"category\": \"Phone\",\n  \"serial\": \"R5CT9201\",\n  \"purchaseDate\": \"2024-06-18\",\n  \"value\": 62000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assets"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER\n\nAdds an item. Saves `assetId`.\n\n**Errors:** 422 bad category (Laptop, Phone, Monitor, Accessory, Furniture, Other)."
+          }
+        },
+        {
+          "name": "Assign to a person",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empId\": \"{{employeeId}}\",\n  \"note\": \"Issued on joining\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assets",
+                "{{assetId}}",
+                "assign"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER\n\nGives an available item to someone and records it in the history.\n\n**Errors:** 409 not available. 404 unknown asset or person."
+          }
+        },
+        {
+          "name": "Mark returned",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Returned in good condition\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}/return",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assets",
+                "{{assetId}}",
+                "return"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER\n\nMarks the item available again.\n\n**Errors:** 409 not assigned."
+          }
+        },
+        {
+          "name": "Assignment history",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assets",
+                "{{assetId}}",
+                "history"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER, AUDITOR\n\nEvery assign and return, newest first."
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Documents",
+      "item": [
+        {
+          "name": "Categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "categories"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nAllowed document categories."
+          }
+        },
+        {
+          "name": "1. Get upload link",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "pm.collectionVariables.set('documentId', pm.response.json().data.documentId);",
+                  "pm.collectionVariables.set('docKey', pm.response.json().data.key);",
+                  "pm.collectionVariables.set('uploadUrl', pm.response.json().data.uploadUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"category\": \"identity\",\n  \"filename\": \"passport.pdf\",\n  \"contentType\": \"application/pdf\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/upload-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "upload-url"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR can upload anything for anyone. Employees can upload identity and certificates for themselves.\n\nReturns a temporary S3 link (5 minutes). Saves `documentId`, `docKey`, `uploadUrl`, `docFilename`. Leave `employeeId` out to upload for yourself.\n\n**Errors:** 403 not allowed for this category. 422 bad category or file type."
+          }
+        },
+        {
+          "name": "2. Upload file to S3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/pdf"
+              }
+            ],
+            "body": {
+              "mode": "file",
+              "file": {}
+            },
+            "url": "{{uploadUrl}}",
+            "description": "**Who:** Goes to S3, not this API\n\nIn Postman choose Body > binary and pick a PDF. Do NOT use the API token here (this request has auth turned off). The Content-Type header must match the one requested in step 1.\n\n**Errors:** 403 from S3 if the link expired (5 minutes) or the Content-Type differs."
+          }
+        },
+        {
+          "name": "3. Confirm upload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"{{documentId}}\",\n  \"employeeId\": \"{{employeeId}}\",\n  \"category\": \"identity\",\n  \"filename\": \"passport.pdf\",\n  \"key\": \"{{docKey}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "confirm"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Same person as step 1\n\nRecords the document, only if the file really reached S3.\n\n**Errors:** 404 file never finished uploading. 409 already recorded."
+          }
+        },
+        {
+          "name": "List documents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents?employeeId={{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "employeeId",
+                  "value": "{{employeeId}}",
+                  "description": "Optional. Omit for your own"
+                }
+              ]
+            },
+            "description": "**Who:** The owner, HR. Finance sees payslips and bank documents.\n\nDocuments of one person (yours by default). You only see categories you are allowed to view."
+          }
+        },
+        {
+          "name": "Download link",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/download-url?employeeId={{employeeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "download-url"
+              ],
+              "query": [
+                {
+                  "key": "employeeId",
+                  "value": "{{employeeId}}",
+                  "description": "Owner of the document. Omit for your own"
+                }
+              ]
+            },
+            "description": "**Who:** Same as List documents\n\nReturns a link that stops working after 2 minutes.\n\n**Errors:** 403 / 404."
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Reports",
+      "item": [
+        {
+          "name": "Dashboard numbers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "dashboard"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\n`scope` is `org` (HR, finance, auditor: whole company), `team` (manager) or `self` (employee: only `pendingMine`)."
+          }
+        },
+        {
+          "name": "Attendance trend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/attendance-trend?days=14",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "attendance-trend"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "14",
+                  "description": "7 to 60, default 14"
+                }
+              ]
+            },
+            "description": "**Who:** HR_ADMIN, HR_MANAGER, FINANCE, AUDITOR\n\nDaily counts for the last N days.\n\n**Errors:** 403 for managers and employees."
+          }
+        },
+        {
+          "name": "Audit trail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "audit"
+              ],
+              "query": []
+            },
+            "description": "**Who:** HR_ADMIN, AUDITOR\n\nThe 50 most recent sensitive actions (employee changes, approvals, payroll, assets, settings)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Notifications",
+      "item": [
+        {
+          "name": "My notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nLatest 30, newest first. Created when something needs you (a request to approve, a decision on yours, a late check-in)."
+          }
+        },
+        {
+          "name": "Mark all read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ],
+              "query": []
+            },
+            "description": "**Who:** Any signed-in user\n\nMarks them read."
+          }
+        }
+      ]
+    }
+  ]
+}
