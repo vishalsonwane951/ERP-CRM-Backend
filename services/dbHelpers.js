@@ -2,10 +2,18 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+<<<<<<< HEAD
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { T } from "../config/tables.js";
 import { clean, fail, makeId, HR_ROLES } from "./helpers.js";
+=======
+  ScanCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { T } from "../config/tables.js";
+import { clean, fail, makeId, FEATURES, featureFlags, HR_ROLES, TEAM_LEAD_ROLES } from "./helpers.js";
+>>>>>>> master
 
 export const getItem = async (db, table, key) =>
   (await db.send(new GetCommand({ TableName: table, Key: key }))).Item;
@@ -20,7 +28,13 @@ export const putNew = async (db, table, item, keyName, conflictMessage) => {
       new PutCommand({
         TableName: table,
         Item: clean(item),
+<<<<<<< HEAD
         ConditionExpression: `attribute_not_exists(${keyName})`,
+=======
+        // aliased with #k because many names are DynamoDB reserved words (token, status, name, date, ...)
+        ConditionExpression: "attribute_not_exists(#k)",
+        ExpressionAttributeNames: { "#k": keyName },
+>>>>>>> master
       }),
     );
   } catch (e) {
@@ -93,6 +107,28 @@ export const queryBy = async (db, table, pkName, pkValue, options = {}) => {
 
   return items;
 };
+<<<<<<< HEAD
+=======
+/** Every item of a small table (platform screens only: organizations, plans, employee counts). `fields` = attributes to return. */
+export const scanAll = async (db, table, fields) => {
+  const names = fields && Object.fromEntries(fields.map((f, i) => [`#f${i}`, f]));
+  const items = [];
+  let lastKey;
+  do {
+    const result = await db.send(
+      new ScanCommand({
+        TableName: table,
+        ExclusiveStartKey: lastKey,
+        ...(fields && { ProjectionExpression: Object.keys(names).join(", "), ExpressionAttributeNames: names }),
+      }),
+    );
+    items.push(...(result.Items ?? []));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+  return items;
+};
+
+>>>>>>> master
 /**
  * Update an item. Pass { set, add, remove, condition }.
  * Returns the updated item, or null when the `condition` was not met.
@@ -163,9 +199,21 @@ export const getOrg = async (db, orgId) => {
     shiftEnd: "18:30",
     graceMinutes: 10,
     halfDayAfterMinutes: 120,
+<<<<<<< HEAD
     departments: [],
     leaveTypes: [],
     ...org,
+=======
+    maxBreaksPerDay: 0, // 0 = breaks are off until HR sets a number
+    breakAllowedAfterMinutes: null, // null = a break is allowed any time after check-in
+    cycleStartDay: 1, // 1 = calendar month, 26 = pay cycle runs 26th to 25th
+    holidays: [], // [{ date: "2026-10-02", name: "Gandhi Jayanti" }]
+    departments: [],
+    leaveTypes: [],
+    ...org,
+    // an organization saved before plans existed has every feature on
+    features: { ...featureFlags(FEATURES), ...org.features },
+>>>>>>> master
   };
 };
 
@@ -178,12 +226,47 @@ export const getEmployee = async (db, orgId, empId) => {
 export const listEmployees = (db, orgId) =>
   queryBy(db, T.employees, "orgId", orgId);
 
+<<<<<<< HEAD
 /** Who the caller may list: a manager sees their direct reports, HR/finance/auditor see everyone */
 export const listVisibleEmployees = (db, user) => {
   if (user.role === "MANAGER")
     return queryBy(db, T.employees, "managerId", user.empId, {
       index: "ByManager",
     });
+=======
+/**
+ * Everyone below this person in the reporting line, at every level (uses managerId + the ByManager index).
+ * A MANAGER gets his project managers and their members, a PROJECT_MANAGER gets his members.
+ * The person himself is not included. Another manager's people are never reached.
+ */
+export const getTeamTree = async (db, user) => {
+  const people = [];
+  const seen = new Set([user.empId]); // stops a loop if two people ever point at each other
+  let level = [user.empId];
+  while (level.length) {
+    const lists = await Promise.all(level.map((id) => queryBy(db, T.employees, "managerId", id, { index: "ByManager" })));
+    level = [];
+    for (const e of lists.flat()) {
+      if (e.orgId !== user.orgId || seen.has(e.empId)) continue;
+      seen.add(e.empId);
+      people.push(e);
+      level.push(e.empId);
+    }
+  }
+  return people;
+};
+
+/** Own record; HR, finance and auditors see everyone; a manager / project manager sees his team tree */
+export const canViewEmployee = async (db, user, emp) => {
+  if (emp.empId === user.empId || [...HR_ROLES, "FINANCE", "AUDITOR"].includes(user.role)) return true;
+  if (!TEAM_LEAD_ROLES.includes(user.role)) return false;
+  return (await getTeamTree(db, user)).some((e) => e.empId === emp.empId);
+};
+
+/** Who the caller may list: managers see their team tree, HR/finance/auditor see everyone */
+export const listVisibleEmployees = (db, user) => {
+  if (TEAM_LEAD_ROLES.includes(user.role)) return getTeamTree(db, user);
+>>>>>>> master
   if ([...HR_ROLES, "FINANCE", "AUDITOR"].includes(user.role))
     return listEmployees(db, user.orgId);
   return fail(403, "Only managers and HR can list people");
@@ -217,4 +300,8 @@ export const audit = (db, user, action, entityType, entityId) => {
     entityType,
     entityId,
   });
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> master

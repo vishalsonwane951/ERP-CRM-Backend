@@ -10,10 +10,22 @@ config/
   tables.js               every table: name, PK, SK, indexes
 routes/                   one small file per module: URL -> controller function
 controllers/              ALL the logic for each module lives here
+<<<<<<< HEAD
 middleware/auth.js        authenticate (JWT) + allow(...roles)
 services/                 shared helpers only (used by more than one controller)
   helpers.js              errors, validation, ids, dates, role checks
   dbHelpers.js            getItem, putItem, queryAll, updateItem, lookups, notify, audit
+=======
+middleware/auth.js        authenticate (JWT), allow(...roles), allowPlatform(...roles), requireFeature(name)
+services/                 shared helpers only (used by more than one controller)
+  helpers.js              errors, validation, ids, dates, role checks
+  dbHelpers.js            getItem, putItem, queryAll, updateItem, lookups, notify, audit
+  mailer.js               sends email (Amazon SES, SMTP, or MAIL_TRANSPORT=log for development)
+  payslipPdf.js           builds a payslip PDF
+  performance.js          the performance score formula and its weights (edit the constants at the top)
+  crypto.js               encrypts bank account and national ID
+  payCalc.js              pay cycle dates and the salary calculation (payroll run + my salary so far)
+>>>>>>> master
   approvalHelpers.js      starting / finding approvers for leave + expense requests
 scripts/createTable.js    creates the table and its two indexes
 scripts/seed.js           demo company, people, attendance, a pending leave request
@@ -38,14 +50,23 @@ const dynamoDb = DynamoDBDocumentClient.from(dynamoDbClient);
 ```bash
 cp .env.example .env      # add your AWS keys, table prefix, bucket, secrets
 npm install
+<<<<<<< HEAD
 npm run db:create         # once. Creates the 13 tables. Wait a few seconds for them to become active
+=======
+npm test                  # business-rule tests on an in-memory database (no AWS needed)
+npm run db:create         # once. Creates the 18 tables. Wait a few seconds for them to become active
+>>>>>>> master
 npm run db:seed           # demo data (password for everyone: Passw0rd!)
 npm run dev               # http://localhost:4000
 ```
 
 Then import `docs/Muster-ERP.postman_collection.json` into Postman and read `docs/API.md`.
 
+<<<<<<< HEAD
 ## Data layout: 13 tables
+=======
+## Data layout: 18 tables
+>>>>>>> master
 
 Plain table and attribute names, no generic key columns. Full list with keys and indexes:
 `docs/Muster-ERP-DynamoDB-Tables.pdf`. The definitions live in `config/tables.js`, which
@@ -54,6 +75,14 @@ Plain table and attribute names, no generic key columns. Full list with keys and
 | Table | PK | SK | Indexes (PK / SK) |
 |---|---|---|---|
 | erp_organizations | orgId | none | none |
+<<<<<<< HEAD
+=======
+| erp_plans | planId | none | none |
+| erp_projects | orgId | projectId | none |
+| erp_project_members | projectId | empId | ByEmployee (empId / projectId) |
+| erp_tasks | projectId | taskId | ByAssignee (assigneeId / dueDate) |
+| erp_onboarding_invites | token | none | ByOrg (orgId / createdAt). `expiresAt` is the TTL attribute: expired links are deleted automatically |
+>>>>>>> master
 | erp_employees | orgId | empId | ByManager (managerId / empId), ByEmail (email / none) |
 | erp_attendance | empId | date | ByOrgDate (orgDate / empId) |
 | erp_leave_balances | empId | typeId | none |

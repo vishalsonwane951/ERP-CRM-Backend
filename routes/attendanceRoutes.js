@@ -5,6 +5,11 @@ const router = Router();
 router.get("/today", c.today);
 router.post("/check-in", c.checkIn);
 router.post("/check-out", c.checkOut);
+<<<<<<< HEAD
+=======
+router.post("/break/start", c.startBreak);
+router.post("/break/end", c.endBreak);
+>>>>>>> master
 router.get("/me", c.myMonth);
 router.get("/org", c.orgDay);
 router.get("/employee/:id", c.employeeMonth);

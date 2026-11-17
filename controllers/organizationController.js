@@ -2,7 +2,11 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
 import { audit, getOrg, updateItem } from "../services/dbHelpers.js";
+<<<<<<< HEAD
 import { makeId, need, pick } from "../services/helpers.js";
+=======
+import { fail, makeId, need, pick } from "../services/helpers.js";
+>>>>>>> master
 
 configureDynamoDB();
 const dynamoDbClient = getDynamoDBClient();
@@ -13,9 +17,35 @@ export const getMine = async (req, res) => {
   res.json({ data: await getOrg(dynamoDb, req.user.orgId) });
 };
 
+<<<<<<< HEAD
 // Shift times, grace period, half-day cut-off and optional geofence { lat, lng, radiusMeters }
 export const updateSettings = async (req, res) => {
   const fields = pick(req.body, ["shiftName", "shiftStart", "shiftEnd", "graceMinutes", "halfDayAfterMinutes", "geofence", "timezone"]);
+=======
+const whole = (value, min, max, message) => {
+  const n = Number(value);
+  if (value === "" || value === null || !Number.isInteger(n) || n < min || n > max) fail(422, message);
+  return n;
+};
+
+// Checks the break, pay-cycle and holiday settings. Throws 422 with a plain message.
+const checkSettings = (f) => {
+  if ("maxBreaksPerDay" in f) f.maxBreaksPerDay = whole(f.maxBreaksPerDay, 0, 10, "maxBreaksPerDay must be a whole number from 0 to 10 (0 means no breaks)");
+  if ("breakAllowedAfterMinutes" in f) // empty = not set: a break is allowed any time after check-in
+    f.breakAllowedAfterMinutes = f.breakAllowedAfterMinutes === "" || f.breakAllowedAfterMinutes === null ? null : whole(f.breakAllowedAfterMinutes, 0, 720, "breakAllowedAfterMinutes must be a whole number of minutes, or empty");
+  if ("cycleStartDay" in f) f.cycleStartDay = whole(f.cycleStartDay, 1, 28, "cycleStartDay must be a day from 1 to 28 (1 = calendar month)");
+  if ("holidays" in f) {
+    if (!Array.isArray(f.holidays) || f.holidays.some((h) => !/^\d{4}-\d{2}-\d{2}$/.test(h?.date || "") || !h?.name)) fail(422, "holidays must be a list of { date: YYYY-MM-DD, name }");
+    f.holidays = [...new Map(f.holidays.map((h) => [h.date, { date: h.date, name: String(h.name) }])).values()].sort((a, b) => a.date.localeCompare(b.date));
+  }
+};
+
+// Shift times, grace period, half-day cut-off, optional geofence { lat, lng, radiusMeters },
+// breaks (maxBreaksPerDay, breakAllowedAfterMinutes), pay cycle (cycleStartDay) and holidays
+export const updateSettings = async (req, res) => {
+  const fields = pick(req.body, ["shiftName", "shiftStart", "shiftEnd", "graceMinutes", "halfDayAfterMinutes", "geofence", "timezone", "maxBreaksPerDay", "breakAllowedAfterMinutes", "cycleStartDay", "holidays"]);
+  checkSettings(fields);
+>>>>>>> master
   const org = await updateItem(dynamoDb, T.organizations, { orgId: req.user.orgId }, { set: fields });
   await audit(dynamoDb, req.user, "SETTINGS_UPDATED", "ORG", req.user.orgId);
   res.json({ data: org });
@@ -40,7 +70,12 @@ export const listLeaveTypes = async (req, res) => {
 export const addLeaveType = async (req, res) => {
   need(req.body, ["name", "annualDays"]);
   const org = await getOrg(dynamoDb, req.user.orgId);
+<<<<<<< HEAD
   const leaveType = { typeId: makeId("lt"), name: req.body.name, annualDays: Number(req.body.annualDays), color: req.body.color || "#0B6E75" };
+=======
+  // paid: false = without-pay leave (WPL). Approved days are deducted from salary and shown separately from absence.
+  const leaveType = { typeId: makeId("lt"), name: req.body.name, annualDays: Number(req.body.annualDays), color: req.body.color || "#0B6E75", paid: req.body.paid !== false };
+>>>>>>> master
   await updateItem(dynamoDb, T.organizations, { orgId: org.orgId }, { set: { leaveTypes: [...org.leaveTypes, leaveType] } });
   res.status(201).json({ data: leaveType });
 };

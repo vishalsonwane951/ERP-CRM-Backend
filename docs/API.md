@@ -16,7 +16,12 @@ Base URL: `http://localhost:4000/api/v1`
 - Success: `{ "data": ... }`. Failure: `{ "error": { "code": 409, "message": "..." } }`.
 - Dates are `YYYY-MM-DD`, months `YYYY-MM`. Times are ISO timestamps (UTC).
 - Access tokens last 15 minutes, refresh tokens 7 days.
+<<<<<<< HEAD
 - A role not listed under **Who** gets `403`. SUPER_ADMIN can do everything.
+=======
+- A role not listed under **Who** gets `403`. SUPER_ADMIN of a company can do everything inside that company. `/platform/*` is only for people whose orgId is `platform`.
+- A feature switched off for the company (payroll, assets, reports, ...) answers `403` on its routes. A suspended company cannot sign in (`403`).
+>>>>>>> master
 
 | Status | Meaning |
 |---|---|
@@ -36,10 +41,26 @@ Base URL: `http://localhost:4000/api/v1`
 | meera@kestrel.test | HR_ADMIN | people, leave stage 2, assets, settings |
 | rohan@kestrel.test | FINANCE | payroll lock, expense stage 2 |
 | nisha@kestrel.test | AUDITOR | read-only reports and audit |
+<<<<<<< HEAD
 | kavya@kestrel.test | MANAGER | approves for sanjay, ananya, vikram |
 | sanjay@kestrel.test | EMPLOYEE | has a pending leave request `lr_seed01` |
 | ananya@kestrel.test | EMPLOYEE | not checked in today |
 | vikram@kestrel.test | EMPLOYEE | |
+=======
+| kavya@kestrel.test | MANAGER | team: pooja (project manager), sanjay, ananya |
+| dev@kestrel.test | MANAGER | team: imran (project manager), vikram, tara. Cannot see Kavya's team |
+| pooja@kestrel.test | PROJECT_MANAGER | reports to Kavya; first approver for sanjay and ananya |
+| imran@kestrel.test | PROJECT_MANAGER | reports to Dev; first approver for vikram and tara |
+| sanjay@kestrel.test | EMPLOYEE | has a pending leave request `lr_seed01` (waiting on Pooja) |
+| ananya@kestrel.test | EMPLOYEE | not checked in today |
+| vikram@kestrel.test, tara@kestrel.test | EMPLOYEE | |
+| hr@orbit.test | HR_ADMIN | second company "Orbit Foods", Starter plan: payroll, assets, projects are OFF |
+| admin@muster.test | SUPER_ADMIN (platform) | organizations, plans, audit, everything on the platform |
+| sales@muster.test | SALES (platform) | plans, organization plan and features |
+| accounts@muster.test | FINANCE (platform) | read-only revenue |
+
+Reporting lines: Manager -> Project Manager -> Employee (`managerId`). Platform staff have orgId `platform`.
+>>>>>>> master
 
 Seeded ids you can use directly: `emp_sanjay`, `emp_kavya`, `dept_eng`, `lt_casual`, `lr_seed01`, `as_laptop1`.
 
@@ -1343,6 +1364,11 @@ Rejects and ends the request. A comment is required. Held leave days are release
 
 ### Escalate
 
+<<<<<<< HEAD
+=======
+> **Changed:** escalating never skips the chain. A stage-1 approver escalates to his own manager (409 when nobody is above him); the HR stage escalates to the admin.
+
+>>>>>>> master
 `POST {{baseUrl}}/approvals/{{approvalId}}/act`
 
 **Who:** The current approver (manager, or role holder). Never the requester.
@@ -1471,6 +1497,7 @@ Creates a claim and sends it to the manager, then Finance. Saves `approvalId` so
 
 ## 8. Payroll
 
+<<<<<<< HEAD
 ### List runs
 
 `GET {{baseUrl}}/payroll/runs`
@@ -1668,6 +1695,69 @@ My own payslips, only for locked months.
   ]
 }
 ```
+=======
+The salary credit flow between HR and Finance. Every step is one conditional update, so two people cannot both act, and every step is written to the audit log and notifies the person who acts next.
+
+```
+DRAFT -> CALCULATED -> SUBMITTED -> APPROVED -> PAID -> PAYSLIPS_SENT        RETURNED = back to HR from SUBMITTED
+```
+
+| Step | Who | Endpoint | Allowed from | Result |
+|---|---|---|---|---|
+| Start a run | HR_ADMIN | `POST /payroll/runs` | (new) | DRAFT |
+| Calculate | HR_ADMIN | `POST /payroll/runs/:period/calculate` | DRAFT, CALCULATED, RETURNED | CALCULATED |
+| Submit to Finance | HR_ADMIN | `POST /payroll/runs/:period/submit` | CALCULATED | SUBMITTED (HR is locked out) |
+| Approve | FINANCE | `POST /payroll/runs/:period/approve` | SUBMITTED | APPROVED |
+| Return to HR | FINANCE | `POST /payroll/runs/:period/return` `{ "reason" }` (required) | SUBMITTED | RETURNED |
+| Record payments | FINANCE | `POST /payroll/runs/:period/payments` | APPROVED | PAID when every line is PAID |
+| Generate payslips and email | HR_ADMIN | `POST /payroll/runs/:period/payslips` | PAID | PAYSLIPS_SENT when every payslip is emailed |
+
+HR_MANAGER and AUDITOR can read. FINANCE only sees runs from SUBMITTED onwards. Any other status gives `409` with a message. The table of steps is `TRANSITIONS` at the top of `controllers/payrollController.js`.
+
+Runs made before this flow keep working: `PROCESSING` is shown as CALCULATED and `FINALIZED` as PAYSLIPS_SENT (their payslips stay visible, and they never trigger emails).
+
+### List runs
+
+`GET {{baseUrl}}/payroll/runs`  **Who:** HR_ADMIN, HR_MANAGER, FINANCE, AUDITOR
+
+Newest first. Each run has `period`, `cycleFrom`, `cycleTo`, `status`, `employeeCount`, `totalGross`, `totalNet`, `createdBy`, and when set `submittedBy`, `approvedBy`, `returnReason`, `returnedBy`.
+
+### Run lines
+
+`GET {{baseUrl}}/payroll/runs/:period/lines`  **Who:** HR_ADMIN, HR_MANAGER, FINANCE, AUDITOR
+
+`{ "data": { "run": {...}, "lines": [...] } }`. A line has the pay figures (`gross, lopDays, lopAmount, pf, professionalTax, tds, deductions, net, absentDays, wplDays, ...`) and `payStatus` (`PENDING | PAID | FAILED | ON_HOLD`), `transactionRef`, `paidOn`, `payNote`, `payslipSentAt`, `payslipDocumentId`, `emailError`.
+
+### Record payments
+
+`POST {{baseUrl}}/payroll/runs/:period/payments`  **Who:** FINANCE
+
+```json
+{ "empIds": ["emp_sanjay", "emp_ananya"], "payStatus": "PAID", "transactionRef": "NEFT-20261105-01", "paidOn": "2026-11-05" }
+```
+
+One person or many: send `empIds`, or `"all": true` for every line that is not paid yet. `payStatus` is `PAID`, `FAILED` or `ON_HOLD`. `PAID` needs `transactionRef`. `FAILED` and `ON_HOLD` take an optional `note` and stay flagged until retried with a new call. A line that is already `PAID` is never changed.
+**Success (200)** `{ "data": { "run": {...}, "updated": 3, "flagged": 1 } }`. **Errors:** 409 run is not APPROVED, or nothing to update. 422 missing reference, bad date.
+
+### Generate payslips and email
+
+`POST {{baseUrl}}/payroll/runs/:period/payslips`  **Who:** HR_ADMIN. Optional body `{ "empId": "emp_x" }` retries one person.
+
+For every line that is `PAID`: builds a PDF, saves it to S3 and the employee's documents (category `payslips`), emails it as an attachment and sets `payslipSentAt`. A failed email stores `emailError` on that line and the run stays PAID; call again (or with `empId`) to retry. A line with `payslipSentAt` is never emailed again, even if two people press the button together.
+**Success (200)** `{ "data": { "run": {...}, "sent": 4, "failed": 0, "skipped": 0 } }`. **Errors:** 409 run is not PAID, or payslips already sent.
+
+### My payslips
+
+`GET {{baseUrl}}/payroll/payslips/me`  **Who:** any signed-in user
+
+Only payslips that were generated (the line has `payslipSentAt`, or it belongs to an older completed run). Each has `payslipDocumentId`, which works with `GET /documents/:id/download-url` for the PDF.
+
+### One person's payslips
+
+`GET {{baseUrl}}/payroll/payslips/employee/:id`  **Who:** HR_ADMIN, HR_MANAGER, FINANCE, or the person himself
+
+HR sees every run, FINANCE the runs from SUBMITTED onwards, the person only released payslips. Each line has `runStatus`. **Errors:** 403 for anyone else.
+>>>>>>> master
 
 ---
 
@@ -2156,3 +2246,283 @@ Marks them read.
   }
 }
 ```
+<<<<<<< HEAD
+=======
+
+
+---
+
+## 13. Platform
+
+Only people in the `platform` organization (SUPER_ADMIN, SALES, FINANCE). A company user, even a company SUPER_ADMIN, gets `403`.
+Actions on an organization are written to **that organization's** audit log.
+
+Feature names: `payroll`, `assets`, `reports`, `onboarding`, `projects`.
+
+### Dashboard
+
+`GET {{baseUrl}}/platform/dashboard`  **Who:** SUPER_ADMIN
+
+```json
+{ "data": { "organizations": { "total": 2, "active": 2, "suspended": 0 }, "employees": 11, "activePlans": 2,
+  "byPlan": [{ "planId": "plan_growth", "name": "Growth", "organizations": 1 }] } }
+```
+
+### Reports (revenue)
+
+`GET {{baseUrl}}/platform/reports`  **Who:** SUPER_ADMIN, FINANCE (read-only)
+
+Estimated from plan price x active organizations (there is no invoices table yet). Returns `monthlyRevenue`, `byPlan[]` and `organizations[]`.
+
+### Audit logs
+
+`GET {{baseUrl}}/platform/audit?orgId=kestrel&limit=100`  **Who:** SUPER_ADMIN
+
+Newest first. `orgId` defaults to `platform` (the platform team's own actions). `limit` max 200.
+
+### List organizations
+
+`GET {{baseUrl}}/platform/organizations`  **Who:** SUPER_ADMIN, SALES
+
+Each row: `orgId, name, status (ACTIVE | SUSPENDED), planId, planName, price, maxEmployees, features{}, employeeCount`.
+
+### Create organization
+
+`POST {{baseUrl}}/platform/organizations`  **Who:** SUPER_ADMIN
+
+```json
+{ "name": "Acme Traders", "planId": "plan_growth", "timezone": "Asia/Kolkata", "adminName": "Asha", "adminEmail": "asha@acme.test" }
+```
+
+`name` and `planId` required. The organization gets the features of its plan. With `adminName` + `adminEmail` its first HR_ADMIN is created and `tempPassword` is returned (or send `adminPassword`).
+**Errors:** 404 plan, 409 name or email already used, 422 missing field.
+
+### Update / suspend / reactivate
+
+- `PATCH {{baseUrl}}/platform/organizations/:orgId` body `{ "name", "timezone" }`  **Who:** SUPER_ADMIN
+- `POST {{baseUrl}}/platform/organizations/:orgId/suspend`  **Who:** SUPER_ADMIN. People of that company can no longer sign in, and signed-in users get `403` on feature routes.
+- `POST {{baseUrl}}/platform/organizations/:orgId/reactivate`  **Who:** SUPER_ADMIN
+
+### Set features
+
+`PUT {{baseUrl}}/platform/organizations/:orgId/features`  **Who:** SUPER_ADMIN, SALES
+
+```json
+{ "features": { "payroll": false, "assets": true } }
+```
+
+Only the named switches change. **Errors:** 422 unknown feature or value that is not true/false.
+
+### Set plan
+
+`PUT {{baseUrl}}/platform/organizations/:orgId/plan`  **Who:** SUPER_ADMIN, SALES
+
+```json
+{ "planId": "plan_starter" }
+```
+
+Also sets the organization's feature switches to the features of that plan. Change single switches afterwards with *Set features*.
+The plan's `maxEmployees` blocks creating more active employees (`403` on `POST /employees`).
+
+### Plans
+
+- `GET {{baseUrl}}/platform/plans`  **Who:** SUPER_ADMIN, SALES, FINANCE
+- `POST {{baseUrl}}/platform/plans`  **Who:** SUPER_ADMIN, SALES. Body `{ "name", "price", "maxEmployees", "features": ["payroll", ...] }`
+- `PATCH {{baseUrl}}/platform/plans/:planId`  **Who:** SUPER_ADMIN, SALES. Body any of `name, price, maxEmployees, features, status (ACTIVE | ARCHIVED)`.
+  Changing a plan does not change organizations already on it; assign the plan again to apply new features.
+
+### Platform staff
+
+- `GET {{baseUrl}}/platform/staff`  **Who:** SUPER_ADMIN
+- `POST {{baseUrl}}/platform/staff`  **Who:** SUPER_ADMIN. Body `{ "name", "email", "role": "SALES" | "FINANCE" }`. Returns `tempPassword`.
+
+### Changes to existing endpoints (Phase 1)
+
+- `POST/PATCH /employees`: `role` may now be `PROJECT_MANAGER`.
+- `GET /employees`, `GET /employees/:id`, `GET /attendance/org`, `GET /attendance/employee/:id`, `GET /reports/dashboard`: a MANAGER sees his whole team tree (project managers and their members), a PROJECT_MANAGER sees his members. Nobody sees another manager's people.
+- `POST /auth/login`, `GET /auth/me`: the user object now has `features` and `isPlatform`.
+- `/payroll/*` needs feature `payroll`, `/assets/*` needs `assets`, `/reports/attendance-trend` and `/reports/audit` need `reports`.
+
+
+---
+
+## 14. Breaks, tasks, expense bills, salary so far (Phase 2)
+
+### Start a break
+
+`POST {{baseUrl}}/attendance/break/start`  **Who:** anyone who checks in
+
+Rules (all enforced here, settings come from the organization): checked in and not checked out, no break already open, breaks used < `maxBreaksPerDay`, and if `breakAllowedAfterMinutes` is set, at least that many minutes since check-in. If it is not set a break is allowed any time between check-in and check-out.
+
+**Success (201)** `{ "data": { "breaksUsed": 1, "onBreak": true } }`
+**Errors:** 400 not checked in. 409 with the reason (already on a break, all breaks used, too early, already checked out, breaks not enabled).
+
+### End a break
+
+`POST {{baseUrl}}/attendance/break/end`  **Who:** anyone who checks in
+
+**Success (200)** `{ "data": { "breaksUsed": 1, "onBreak": false, "breakMinutes": 12 } }`. **Errors:** 409 you are not on a break.
+
+Break time is not counted as worked time: `workedMinutes` on check-out is the time since check-in minus the breaks. Check-out closes a break that is still open. The attendance record has `breaks: [{ startAt, endAt }]` and `breakMinutes`.
+
+### Today (changed)
+
+`GET {{baseUrl}}/attendance/today` now also returns
+
+```json
+{ "policy": { "maxBreaksPerDay": 2, "breakAllowedAfterMinutes": null },
+  "breaksUsed": 0, "onBreak": false, "canBreakNow": true, "breakBlockedReason": null }
+```
+
+`canBreakNow` is computed by the same rule as `break/start`; when false, `breakBlockedReason` is a short sentence. The app shows the Break button only when `canBreakNow` is true.
+
+### Settings (changed)
+
+`PUT {{baseUrl}}/organizations/policy`  **Who:** HR_ADMIN. New optional fields:
+
+| Field | Meaning |
+|---|---|
+| `maxBreaksPerDay` | whole number 0 to 10. 0 = breaks off (the default until set) |
+| `breakAllowedAfterMinutes` | whole number of minutes since check-in. `null` or `""` = not set |
+| `cycleStartDay` | 1 to 28. 1 = calendar month (default). 26 = pay cycle 26th to 25th |
+| `holidays` | `[{ "date": "2026-12-25", "name": "Christmas Day" }]`. Not working days |
+
+**Errors:** 422 with a plain message for an invalid value.
+
+`POST {{baseUrl}}/organizations/leave-types` accepts `"paid": false` for without-pay leave (WPL). Leave types without the flag are paid.
+
+### My tasks (today)
+
+`GET {{baseUrl}}/projects/tasks/mine`  **Who:** any signed-in user. Needs feature `projects`.
+
+Tasks assigned to me that are due today or earlier and not done, plus the ones I finished today. Each task has `projectName` and `overdue`.
+
+### Change my task status
+
+`PATCH {{baseUrl}}/projects/tasks/:projectId/:taskId/status`  **Who:** only the person the task is assigned to
+
+```json
+{ "status": "IN_PROGRESS" }
+```
+
+`status` is `TODO`, `IN_PROGRESS` or `DONE`. Finishing a task notifies the person who assigned it. **Errors:** 403 not your task, 404, 422.
+
+### Expenses: bill is required (changed)
+
+1. `POST /documents/upload-url` with `"category": "expense-bills"`, PUT the file to the returned URL, `POST /documents/confirm`.
+2. `POST {{baseUrl}}/expenses` with `"billDocumentId": "<documentId from confirm>"` plus the usual fields.
+
+**Errors:** 422 when `billDocumentId` is missing, or is not one of your own `expense-bills` documents. 409 when the same bill is already on another claim.
+The claim stores `billDocumentId`, `billKey`, `billFilename`; the approval `payload` carries `billDocumentId` so approvers can open it.
+Expense bills can be opened (`GET /documents/:id/download-url?employeeId=<owner>`) by the owner, HR, finance, auditors and the owner's managers. Allowed upload types: PDF, PNG, JPG.
+
+### My salary so far
+
+`GET {{baseUrl}}/payroll/my-estimate`  **Who:** any signed-in user (his own pay only). Needs feature `payroll`.
+
+From the first day of the current pay cycle (`cycleStartDay`) up to today (today counts once you have checked in). Weekends and holidays are not working days.
+
+```json
+{ "data": {
+  "label": "Estimate till today, not a payslip",
+  "period": "2026-11",
+  "cycle": { "from": "2026-10-26", "to": "2026-11-25", "asOf": "2026-11-05" },
+  "days":  [{ "label": "Present days", "value": 6 }, ...],
+  "lines": [{ "label": "Absent: 1 days x 4714", "amount": -4714, "kind": "deduct" }, ...],
+  "summary": { "gross": 99000, "absentDays": 1, "wplDays": 0, "lopAmount": 4714, "net": 82805 } } }
+```
+
+Days counted: present, half days (0.5), approved paid leave, without-pay leave (WPL) and absent days (deductions), then PF, professional tax and TDS (example rules, see `services/payCalc.js`).
+
+### Payroll runs (changed)
+
+A run's `period` is named after the month its cycle ends in. `POST /payroll/runs` saves `cycleFrom` and `cycleTo` on the run (from `cycleStartDay`), so changing the setting later does not move an old run. Calculation now uses those dates, org holidays, and the paid flag of leave types. Lines have extra fields: `elapsedDays, presentDays, halfDays, paidLeaveDays, wplDays, absentDays, dayRate`; `lopDays` is absent + WPL.
+
+
+---
+
+## 15. Projects, team, onboarding, performance (Phases 3 and 4)
+
+### Leave and expense routing (changed)
+
+Stage 1 is the requester's reporting manager: the first ACTIVE person up the `managerId` chain. For an employee that is his PROJECT_MANAGER; with no project manager it is his Manager; if that person has left, one level up. It **never** goes to HR first. HR (stage 2) sees the request, and gets Approve / Reject, only after stage 1 approved. HR_MANAGER can also decide the HR stage.
+With nobody to approve, `POST /leave` and `POST /expenses` answer `409` ("You have no active reporting manager...") **before** saving anything.
+`GET /approvals/:id` now returns, per stage, `decision: { action, actorName, comment, at }` once that stage decided, so HR sees what the project manager said.
+
+### Projects (feature `projects`)
+
+Managers own projects (`managerId`), project managers run them (`pmId`). Each project has members (an employee works on it under a project manager) and tasks.
+
+| Endpoint | Who | Notes |
+|---|---|---|
+| `GET /projects` | any | MANAGER: his own. PROJECT_MANAGER: the ones he runs. HR/AUDITOR: all. Others: where they are a member. Each has `taskCounts` |
+| `GET /projects/:projectId` | owner manager, project manager, HR, members | members, tasks (a plain member sees only his own), `canManage`, `canAssignTasks` |
+| `POST /projects` | MANAGER, HR_ADMIN | `{ name, startDate?, endDate?, pmId?, managerId (HR only) }`. A manager can only pick a project manager from his own team (403) |
+| `PATCH /projects/:projectId` | the project's MANAGER, HR_ADMIN | `name, status (ACTIVE \| ON_HOLD \| COMPLETED), startDate, endDate` |
+| `PUT /projects/:projectId/pm` | the project's MANAGER, HR_ADMIN | `{ pmId }`. Members move under the new project manager |
+| `POST /projects/:projectId/members` | the project's MANAGER, HR_ADMIN | `{ empId }`. A manager can only add people from his own team. Needs a project manager first |
+| `DELETE /projects/:projectId/members/:empId` | same | 409 while the person still has open tasks on the project |
+| `POST /projects/:projectId/tasks` | MANAGER, PROJECT_MANAGER of that project | `{ title, description?, assigneeId, dueDate }`. A manager assigns to the project manager, a project manager to a member (422 otherwise) |
+| `PATCH` / `DELETE /projects/:projectId/tasks/:taskId` | who assigned it, the project's manager or project manager | `title, description, dueDate` |
+| `GET /projects/tasks/mine`, `PATCH /projects/tasks/:projectId/:taskId/status` | assignee | see section 14 |
+
+### Team dashboard (feature `projects`)
+
+`GET {{baseUrl}}/team/overview`  **Who:** MANAGER, PROJECT_MANAGER
+
+A MANAGER gets one group per project manager (that person's whole team, every level), plus a group for people reporting to him directly. A PROJECT_MANAGER gets one group. Who is included comes from the token, never from a parameter.
+
+```json
+{ "data": { "date": "2026-11-16", "groups": [ {
+  "lead": { "empId": "emp_pooja", "name": "Pooja Menon" }, "size": 2,
+  "attendance": { "present": 1, "late": 1, "halfDay": 0, "onLeave": 0, "notIn": 0 },
+  "tasks": { "open": 3, "inProgress": 1, "done": 2, "overdue": 1, "total": 5 },
+  "members": [ { "empId": "emp_sanjay", "name": "Sanjay Patil", "today": "PRESENT", "tasks": { "open": 2, "overdue": 1 } } ] } ] } }
+```
+
+`GET {{baseUrl}}/team/employee/:id?month=2026-11`  **Who:** MANAGER, PROJECT_MANAGER, HR, FINANCE, AUDITOR (and the same people-visibility rule as `GET /employees/:id`, otherwise 403)
+
+One person's attendance for the month (`records`, `summary`), leave requests and tasks.
+
+### Performance
+
+`GET {{baseUrl}}/employees/:id/performance?month=2026-11`  **Who:** same visibility as `GET /employees/:id` (the person himself, HR, finance, auditor, his managers)
+
+```json
+{ "data": { "month": "2026-11", "score": 83, "label": "Good",
+  "components": { "tasks": { "weight": 0.5, "score": 0.75, "due": 4, "onTime": 3, "doneLate": 1 },
+                  "attendance": { "weight": 0.4, "score": 0.9, "present": 12, "late": 2, "halfDay": 0, "absent": 1 },
+                  "leaves": { "weight": 0.1, "score": 0.8, "days": 1 } },
+  "trend": [ { "month": "2026-06", "score": 71 }, "... six months, oldest first" ] } }
+```
+
+`GET {{baseUrl}}/employees/performance?month=2026-11`  **Who:** HR_ADMIN, HR_MANAGER, MANAGER, PROJECT_MANAGER, AUDITOR: one row per visible person, best score first.
+The formula and its weights are constants at the top of `services/performance.js`. A part with nothing to measure (no tasks due) is left out and the other weights scale up.
+
+### Onboarding (feature `onboarding`)
+
+HR creates an invite; the candidate gets a link `/onboard/<token>` (7 days, one submission); HR reviews and converts it into an employee.
+
+| Endpoint | Who | Notes |
+|---|---|---|
+| `POST /onboarding/invites` | HR_ADMIN, HR_MANAGER | `{ name, email, role?, deptId?, designation? }`. Emails the link and returns `link`, `emailSent`, `emailError`. 409 if the email already belongs to an employee |
+| `GET /onboarding/invites` | HR | statuses `SENT`, `SUBMITTED`, `CONVERTED`. Never includes bank or ID numbers |
+| `GET /onboarding/invites/:token` | HR | the submission (bank account and ID decrypted) and the uploaded documents |
+| `GET /onboarding/invites/:token/documents/:documentId/url` | HR | 2-minute link to a file the candidate uploaded |
+| `POST /onboarding/invites/:token/resend` | HR | emails the link again |
+| `POST /onboarding/invites/:token/convert` | HR_ADMIN | `{ joinDate, salary, designation, deptId, role?, managerId? }`. Creates the employee with the same code as `POST /employees`, files the documents on his card. Returns `employee` and `tempPassword`. 409 if not SUBMITTED or already converted |
+
+**Public endpoints (no sign-in).** The long random token in the link is the key. Rate limited per IP (120 requests per 15 minutes, 30 for uploads, 10 for submitting). A wrong token is `404`, an expired link `410`, a submitted form `409`.
+
+| Endpoint | Notes |
+|---|---|
+| `GET /public/onboarding/:token` | candidate name and email, company name, uploaded files |
+| `POST /public/onboarding/:token/upload-url` | `{ category: identity \| bank \| certificates, filename, contentType }`. PDF, PNG or JPG only, up to 15 files. Returns a 5-minute S3 upload URL |
+| `POST /public/onboarding/:token/confirm` | `{ documentId, category, filename, key }`. Checks the file in S3: over 10 MB or a wrong type is deleted and refused |
+| `POST /public/onboarding/:token/submit` | `{ phone, address, bankAccount, bankIfsc, nationalId, dob?, emergencyName?, emergencyPhone?, bankName? }`. Needs at least one identity document. Bank account and national ID are stored encrypted |
+
+### Email
+
+`services/mailer.js` sends through Amazon SES (default) or SMTP (`MAIL_TRANSPORT=smtp`); `MAIL_TRANSPORT=log` prints emails instead of sending (development). See `.env.example`.
+
+>>>>>>> master

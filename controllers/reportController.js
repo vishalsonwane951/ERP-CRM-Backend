@@ -3,7 +3,11 @@ import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
 import { getOrg, listVisibleEmployees, queryBy } from "../services/dbHelpers.js";
 import { getPendingFor } from "../services/approvalHelpers.js";
+<<<<<<< HEAD
 import { addDays, nowParts } from "../services/helpers.js";
+=======
+import { addDays, nowParts, TEAM_LEAD_ROLES } from "../services/helpers.js";
+>>>>>>> master
 
 configureDynamoDB();
 const dynamoDbClient = getDynamoDBClient();
@@ -17,7 +21,11 @@ export const dashboard = async (req, res) => {
   const org = await getOrg(dynamoDb, req.user.orgId);
   const { date } = nowParts(org.timezone);
   const pendingMine = (await getPendingFor(dynamoDb, req.user)).length;
+<<<<<<< HEAD
   const scope = req.user.role === "MANAGER" ? "team" : ORG_ROLES.includes(req.user.role) ? "org" : "self";
+=======
+  const scope = TEAM_LEAD_ROLES.includes(req.user.role) ? "team" : ORG_ROLES.includes(req.user.role) ? "org" : "self";
+>>>>>>> master
   if (scope === "self") return res.json({ data: { scope, date, pendingMine } });
 
   const people = (await listVisibleEmployees(dynamoDb, req.user)).filter((e) => e.status === "ACTIVE");

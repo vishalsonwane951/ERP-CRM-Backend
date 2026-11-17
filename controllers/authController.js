@@ -4,7 +4,11 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
 import { getEmployee, getOrg, queryBy } from "../services/dbHelpers.js";
+<<<<<<< HEAD
 import { fail, need } from "../services/helpers.js";
+=======
+import { fail, FEATURES, featureFlags, need, PLATFORM_ORG } from "../services/helpers.js";
+>>>>>>> master
 
 // ---------- Setup ----------
 configureDynamoDB();
@@ -25,17 +29,32 @@ function createToken(employee, secret, expiresIn) {
 
 // Build the user object the frontend needs
 async function buildUser(employee) {
+<<<<<<< HEAD
   // Super admin has no organization row
   const org =
     employee.role === "SUPER_ADMIN"
       ? { name: "Platform", timezone: "Asia/Kolkata" }
       : await getOrg(dynamoDb, employee.orgId);
       
+=======
+  // Platform staff have no organization row
+  const org =
+    employee.orgId === PLATFORM_ORG
+      ? { name: "Platform", timezone: "Asia/Kolkata", features: featureFlags(FEATURES) }
+      : await getOrg(dynamoDb, employee.orgId);
+  if (org.status === "SUSPENDED") fail(403, "This organization is suspended. Contact support.");
+
+>>>>>>> master
   return {
     empId: employee.empId,
     orgId: employee.orgId,
     orgName: org.name,
     timezone: org.timezone,
+<<<<<<< HEAD
+=======
+    features: org.features, // { payroll: true, ... } the UI hides what is off
+    isPlatform: employee.orgId === PLATFORM_ORG,
+>>>>>>> master
     name: employee.name,
     email: employee.email,
     role: employee.role,

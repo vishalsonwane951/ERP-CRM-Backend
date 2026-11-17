@@ -1,7 +1,11 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+<<<<<<< HEAD
 import { authenticate } from "./middleware/auth.js";
+=======
+import { authenticate, requireFeature } from "./middleware/auth.js";
+>>>>>>> master
 import authRoutes from "./routes/authRoutes.js";
 import organizationRoutes from "./routes/organizationRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
@@ -14,6 +18,14 @@ import assetRoutes from "./routes/assetRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+<<<<<<< HEAD
+=======
+import platformRoutes from "./routes/platformRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
+import onboardingRoutes from "./routes/onboardingRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js";
+>>>>>>> master
 
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(",") || "*" }));
@@ -21,6 +33,10 @@ app.use(express.json());
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 app.use("/api/v1/auth", authRoutes); // login and refresh are public
+<<<<<<< HEAD
+=======
+app.use("/api/v1/public", publicRoutes); // candidate onboarding by link (rate limited, token is the key)
+>>>>>>> master
 
 const api = express.Router();
 api.use(authenticate); // everything below needs a valid token
@@ -30,11 +46,23 @@ api.use("/attendance", attendanceRoutes);
 api.use("/leaves", leaveRoutes);
 api.use("/approvals", approvalRoutes);
 api.use("/expenses", expenseRoutes);
+<<<<<<< HEAD
 api.use("/payroll", payrollRoutes);
 api.use("/assets", assetRoutes);
 api.use("/documents", documentRoutes);
 api.use("/reports", reportRoutes);
 api.use("/notifications", notificationRoutes);
+=======
+api.use("/payroll", requireFeature("payroll"), payrollRoutes);
+api.use("/assets", requireFeature("assets"), assetRoutes);
+api.use("/documents", documentRoutes);
+api.use("/reports", reportRoutes);
+api.use("/notifications", notificationRoutes);
+api.use("/projects", requireFeature("projects"), projectRoutes);
+api.use("/team", requireFeature("projects"), teamRoutes);
+api.use("/onboarding", requireFeature("onboarding"), onboardingRoutes);
+api.use("/platform", platformRoutes); // platform staff only (checked in the routes)
+>>>>>>> master
 app.use("/api/v1", api);
 
 app.use((req, res) => res.status(404).json({ error: { code: 404, message: `${req.method} ${req.path} was not found` } }));

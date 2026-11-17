@@ -2,7 +2,11 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
 import { getEmployee, getItem, putItem, queryBy, updateItem } from "../services/dbHelpers.js";
+<<<<<<< HEAD
 import { createApproval, isOpen } from "../services/approvalHelpers.js";
+=======
+import { createApproval, isOpen, assertCanRoute } from "../services/approvalHelpers.js";
+>>>>>>> master
 import { fail, makeId, need, weekdays } from "../services/helpers.js";
 
 configureDynamoDB();
@@ -35,6 +39,11 @@ export const apply = async (req, res) => {
   const left = balance.total - balance.used - balance.pending;
   if (days > left) fail(400, `You have ${left} days of ${balance.name} left, but asked for ${days}`);
 
+<<<<<<< HEAD
+=======
+  const requester = await getEmployee(dynamoDb, orgId, empId);
+  await assertCanRoute(dynamoDb, requester); // 409 now, instead of leaving a held balance behind
+>>>>>>> master
   const reqId = makeId("lr");
   const request = {
     empId, reqId, orgId, typeId, typeName: balance.name, color: balance.color, from, to, days, reason,
@@ -42,7 +51,11 @@ export const apply = async (req, res) => {
   };
   await putItem(dynamoDb, T.leaveRequests, request);
   await updateItem(dynamoDb, T.leaveBalances, { empId, typeId }, { add: { pending: days } }); // days are held until approved or rejected
+<<<<<<< HEAD
   await createApproval(dynamoDb, await getEmployee(dynamoDb, orgId, empId), {
+=======
+  await createApproval(dynamoDb, requester, {
+>>>>>>> master
     reqId, entityType: "LEAVE", summary: `${balance.name}, ${days} day${days > 1 ? "s" : ""} (${from} to ${to})`, payload: { typeId, days, from, to, reason },
   });
   res.status(201).json({ data: request });

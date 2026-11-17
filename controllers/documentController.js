@@ -4,7 +4,11 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
 import { configureS3, getS3Client } from "../config/s3.js";
+<<<<<<< HEAD
 import { getEmployee, getItem, putNew, queryBy } from "../services/dbHelpers.js";
+=======
+import { canViewEmployee, getEmployee, getItem, putNew, queryBy } from "../services/dbHelpers.js";
+>>>>>>> master
 import { fail, HR_ROLES, makeId, need } from "../services/helpers.js";
 
 configureDynamoDB();
@@ -14,6 +18,7 @@ configureS3();
 const s3 = getS3Client();
 
 const BUCKET = process.env.S3_BUCKET;
+<<<<<<< HEAD
 const CATEGORIES = ["identity", "bank", "offer-letters", "payslips", "certificates", "contracts", "assets"];
 const TYPES = ["application/pdf", "image/png", "image/jpeg", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 
@@ -23,6 +28,19 @@ const canUpload = (user, ownerId, category) =>
 // Owner and HR see everything. Finance sees payslips and bank documents.
 const canView = (user, ownerId, category) =>
   HR_ROLES.includes(user.role) || ownerId === user.empId || (user.role === "FINANCE" && ["payslips", "bank"].includes(category));
+=======
+const CATEGORIES = ["identity", "bank", "offer-letters", "payslips", "certificates", "contracts", "assets", "expense-bills"];
+const TYPES = ["application/pdf", "image/png", "image/jpeg", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+
+// HR can upload anything for anyone. Employees can add their own identity papers, certificates and expense bills.
+const canUpload = (user, ownerId, category) =>
+  HR_ROLES.includes(user.role) || (ownerId === user.empId && ["identity", "certificates", "expense-bills"].includes(category));
+// Owner and HR see everything. Finance sees payslips and bank documents.
+// Expense bills are also visible to the people who approve the claim: finance, auditors and the owner's managers.
+const canView = async (user, ownerId, category) =>
+  HR_ROLES.includes(user.role) || ownerId === user.empId || (user.role === "FINANCE" && ["payslips", "bank"].includes(category)) ||
+  (category === "expense-bills" && (await canViewEmployee(dynamoDb, user, { empId: ownerId })));
+>>>>>>> master
 
 export const categories = (req, res) => res.json({ data: CATEGORIES });
 
@@ -63,7 +81,13 @@ export const confirm = async (req, res) => {
 export const list = async (req, res) => {
   const ownerId = req.query.employeeId || req.user.empId;
   const docs = await queryBy(dynamoDb, T.documents, "empId", ownerId);
+<<<<<<< HEAD
   const visible = docs.filter((d) => d.orgId === req.user.orgId && canView(req.user, ownerId, d.category));
+=======
+  const sameOrg = docs.filter((d) => d.orgId === req.user.orgId);
+  const allowed = await Promise.all(sameOrg.map((d) => canView(req.user, ownerId, d.category)));
+  const visible = sameOrg.filter((d, i) => allowed[i]);
+>>>>>>> master
   res.json({ data: visible.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt)) });
 };
 
@@ -72,7 +96,11 @@ export const downloadUrl = async (req, res) => {
   const ownerId = req.query.employeeId || req.user.empId;
   const doc = await getItem(dynamoDb, T.documents, { empId: ownerId, documentId: req.params.id });
   if (!doc || doc.orgId !== req.user.orgId) fail(404, "Document not found");
+<<<<<<< HEAD
   if (!canView(req.user, ownerId, doc.category)) fail(403, "You do not have access to this");
+=======
+  if (!(await canView(req.user, ownerId, doc.category))) fail(403, "You do not have access to this");
+>>>>>>> master
   const url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: BUCKET, Key: doc.key, ResponseContentDisposition: `attachment; filename="${doc.filename}"` }), { expiresIn: 120 });
   res.json({ data: { url, expiresIn: 120, filename: doc.filename } });
 };

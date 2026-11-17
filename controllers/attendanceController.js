@@ -1,8 +1,13 @@
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
+<<<<<<< HEAD
 import { getEmployee, getItem, getOrg, listVisibleEmployees, notify, putNew, queryBy, updateItem } from "../services/dbHelpers.js";
 import { canViewEmployee, fail, monthEnd, nowParts, toMinutes } from "../services/helpers.js";
+=======
+import { canViewEmployee, getEmployee, getItem, getOrg, listVisibleEmployees, notify, putNew, queryBy, updateItem } from "../services/dbHelpers.js";
+import { fail, monthEnd, nowParts, toMinutes } from "../services/helpers.js";
+>>>>>>> master
 
 configureDynamoDB();
 const dynamoDbClient = getDynamoDBClient();
@@ -26,6 +31,74 @@ const monthData = async (empId, month) => {
 };
 const thisMonth = (tz) => nowParts(tz).date.slice(0, 7);
 
+<<<<<<< HEAD
+=======
+// ---------- breaks ----------
+// Total minutes of the breaks so far. A break that is still open counts until `untilIso`.
+const breakMinutes = (breaks = [], untilIso) =>
+  Math.round(breaks.reduce((ms, b) => ms + (new Date(b.endAt || untilIso) - new Date(b.startAt)), 0) / 60000);
+
+// The break rules in ONE place: /today uses it to show or hide the button, /break/start uses it to enforce.
+// The numbers come from the organization settings (maxBreaksPerDay, breakAllowedAfterMinutes), never from the code.
+const breakState = (record, org, nowMs) => {
+  const used = record?.breaks?.length || 0;
+  const onBreak = used > 0 && !record.breaks[used - 1].endAt;
+  const max = org.maxBreaksPerDay;
+  const after = org.breakAllowedAfterMinutes; // null = not set: allowed any time between check-in and check-out
+  let reason;
+  if (!max) reason = "Breaks are not enabled for your organization";
+  else if (!record) reason = "Check in first";
+  else if (record.checkOutAt) reason = "You have already checked out";
+  else if (onBreak) reason = "You are already on a break";
+  else if (used >= max) reason = `You have used all ${max} breaks today`;
+  else if (after != null) {
+    const wait = Math.ceil(after - (nowMs - new Date(record.checkInAt).getTime()) / 60000);
+    if (wait > 0) reason = `Breaks open ${after} minutes after check-in (${wait} more minutes)`;
+  }
+  return { breaksUsed: used, onBreak, canBreakNow: !reason, breakBlockedReason: reason };
+};
+
+// Both break actions replace the list only if nobody changed it meanwhile and the day is not over (a double tap gets a 409)
+const saveBreaks = async (record, breaks) => {
+  const updated = await updateItem(dynamoDb, T.attendance, { empId: record.empId, date: record.date }, {
+    set: { breaks },
+    condition: {
+      expr: "attribute_not_exists(#c_out) AND (attribute_not_exists(#c_breaks) OR size(#c_breaks) = :c_count)",
+      names: { "#c_out": "checkOutAt", "#c_breaks": "breaks" },
+      values: { ":c_count": record.breaks?.length || 0 },
+    },
+  });
+  if (!updated) fail(409, "Your break status just changed. Refresh and try again.");
+};
+
+const todayRecord = async (user, org) => {
+  const { date } = nowParts(org.timezone);
+  return getItem(dynamoDb, T.attendance, { empId: user.empId, date });
+};
+
+export const startBreak = async (req, res) => {
+  const org = await getOrg(dynamoDb, req.user.orgId);
+  const record = await todayRecord(req.user, org);
+  if (!record) fail(400, "Check in first, then take a break");
+  const state = breakState(record, org, Date.now());
+  if (!state.canBreakNow) fail(409, state.breakBlockedReason);
+  await saveBreaks(record, [...(record.breaks || []), { startAt: new Date().toISOString() }]);
+  res.status(201).json({ data: { breaksUsed: state.breaksUsed + 1, onBreak: true } });
+};
+
+export const endBreak = async (req, res) => {
+  const org = await getOrg(dynamoDb, req.user.orgId);
+  const record = await todayRecord(req.user, org);
+  if (!record) fail(400, "Check in first");
+  const breaks = record.breaks || [];
+  if (!breaks.length || breaks[breaks.length - 1].endAt) fail(409, "You are not on a break");
+  const endAt = new Date().toISOString();
+  const closed = breaks.map((b, i) => (i === breaks.length - 1 ? { ...b, endAt } : b));
+  await saveBreaks(record, closed);
+  res.json({ data: { breaksUsed: closed.length, onBreak: false, breakMinutes: breakMinutes(closed, endAt) } });
+};
+
+>>>>>>> master
 export const today = async (req, res) => {
   const org = await getOrg(dynamoDb, req.user.orgId);
   const { date } = nowParts(org.timezone);
@@ -34,8 +107,17 @@ export const today = async (req, res) => {
     data: {
       date, serverTime: new Date().toISOString(),
       shift: { name: org.shiftName, start: org.shiftStart, end: org.shiftEnd },
+<<<<<<< HEAD
       policy: { graceMinutes: org.graceMinutes, halfDayAfterMinutes: org.halfDayAfterMinutes, geofence: org.geofence },
       record: record || null,
+=======
+      policy: {
+        graceMinutes: org.graceMinutes, halfDayAfterMinutes: org.halfDayAfterMinutes, geofence: org.geofence,
+        maxBreaksPerDay: org.maxBreaksPerDay, breakAllowedAfterMinutes: org.breakAllowedAfterMinutes,
+      },
+      record: record || null,
+      ...breakState(record, org, Date.now()), // breaksUsed, onBreak, canBreakNow, breakBlockedReason
+>>>>>>> master
     },
   });
 };
@@ -56,7 +138,11 @@ export const checkIn = async (req, res) => {
   const status = lateBy <= org.graceMinutes ? "PRESENT" : lateBy <= org.halfDayAfterMinutes ? "LATE" : "HALF_DAY";
   const record = {
     empId, date: now.date, orgId, orgDate: `${orgId}#${now.date}`, deptId: emp.deptId, status,
+<<<<<<< HEAD
     checkInAt: new Date().toISOString(), lateByMinutes: Math.max(lateBy, 0), lat, lng, deviceId,
+=======
+    checkInAt: new Date().toISOString(), lateByMinutes: Math.max(lateBy, 0), lat, lng, deviceId, breaks: [],
+>>>>>>> master
   };
   // one record per employee per day: a second check-in (or a retry) gets a 409 instead of a duplicate
   await putNew(dynamoDb, T.attendance, record, "empId", "You have already checked in today");
@@ -72,10 +158,20 @@ export const checkOut = async (req, res) => {
   if (!record) fail(400, "Check in first, then check out");
   if (record.checkOutAt) fail(409, "You have already checked out today");
 
+<<<<<<< HEAD
   const workedMinutes = Math.round((Date.now() - new Date(record.checkInAt).getTime()) / 60000);
   const checkOutAt = new Date().toISOString();
   await updateItem(dynamoDb, T.attendance, { empId: record.empId, date }, { set: { checkOutAt, workedMinutes } });
   res.json({ data: { date, checkOutAt, workedMinutes } });
+=======
+  // checking out ends a break that is still open; break time is not worked time
+  const checkOutAt = new Date().toISOString();
+  const breaks = (record.breaks || []).map((b) => (b.endAt ? b : { ...b, endAt: checkOutAt }));
+  const breakTime = breakMinutes(breaks, checkOutAt);
+  const workedMinutes = Math.max(0, Math.round((Date.now() - new Date(record.checkInAt).getTime()) / 60000) - breakTime);
+  await updateItem(dynamoDb, T.attendance, { empId: record.empId, date }, { set: { checkOutAt, workedMinutes, breaks, breakMinutes: breakTime } });
+  res.json({ data: { date, checkOutAt, workedMinutes, breakMinutes: breakTime } });
+>>>>>>> master
 };
 
 export const myMonth = async (req, res) => {
@@ -85,14 +181,24 @@ export const myMonth = async (req, res) => {
 
 export const employeeMonth = async (req, res) => {
   const emp = await getEmployee(dynamoDb, req.user.orgId, req.params.id);
+<<<<<<< HEAD
   if (!canViewEmployee(req.user, emp)) fail(403, "You do not have access to this");
+=======
+  if (!(await canViewEmployee(dynamoDb, req.user, emp))) fail(403, "You do not have access to this");
+>>>>>>> master
   const org = await getOrg(dynamoDb, req.user.orgId);
   res.json({ data: await monthData(emp.empId, req.query.month || thisMonth(org.timezone)) });
 };
 
+<<<<<<< HEAD
 // Everyone (HR, auditor) or the manager's team, for one date
 export const orgDay = async (req, res) => {
   if (!["HR_ADMIN", "HR_MANAGER", "AUDITOR", "MANAGER", "SUPER_ADMIN"].includes(req.user.role)) fail(403, "You do not have access to this");
+=======
+// Everyone (HR, auditor) or the manager's / project manager's team, for one date
+export const orgDay = async (req, res) => {
+  if (!["HR_ADMIN", "HR_MANAGER", "AUDITOR", "MANAGER", "PROJECT_MANAGER", "SUPER_ADMIN"].includes(req.user.role)) fail(403, "You do not have access to this");
+>>>>>>> master
   const org = await getOrg(dynamoDb, req.user.orgId);
   const todayDate = nowParts(org.timezone).date;
   const date = req.query.date || todayDate;

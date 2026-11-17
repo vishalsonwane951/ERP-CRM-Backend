@@ -2,7 +2,11 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { configureDynamoDB, getDynamoDBClient } from "../config/db.js";
 import { T } from "../config/tables.js";
 import { audit, getEmployee, getItem, notify, queryBy, updateItem } from "../services/dbHelpers.js";
+<<<<<<< HEAD
 import { canAct, findApprover, getPendingFor, isOpen } from "../services/approvalHelpers.js";
+=======
+import { canAct, findApprover, findReportingManager, getPendingFor, isOpen } from "../services/approvalHelpers.js";
+>>>>>>> master
 import { fail, HR_ROLES } from "../services/helpers.js";
 
 configureDynamoDB();
@@ -17,7 +21,26 @@ const loadDetail = async (user, reqId) => {
   const allowed = request.requesterId === user.empId || request.requesterManagerId === user.empId || canAct(user, request.approver) ||
     request.actions.some((a) => a.actorId === user.empId) || [...HR_ROLES, "AUDITOR"].includes(user.role);
   if (!allowed) fail(403, "You do not have access to this");
+<<<<<<< HEAD
   return { ...request, canAct: isOpen(request.status) && request.requesterId !== user.empId && canAct(user, request.approver) };
+=======
+  // each stage also carries its last approve / reject decision, so HR sees what the project manager decided and why
+  const stages = request.stages.map((s, i) => {
+    const decision = [...request.actions].reverse().find((a) => a.stage === i + 1 && (a.action === "approve" || a.action === "reject"));
+    return decision ? { ...s, decision: { action: decision.action, actorName: decision.actorName, comment: decision.comment, at: decision.at } } : s;
+  });
+  return { ...request, stages, canAct: isOpen(request.status) && request.requesterId !== user.empId && canAct(user, request.approver) };
+};
+
+// Escalating does not skip anybody. Stage 1: the approver's own manager. The HR stage: the admin. Nobody above: refused.
+const escalationTarget = async (request) => {
+  if (request.approver.kind === "USER") {
+    const approver = await getEmployee(dynamoDb, request.orgId, request.approver.approverId);
+    return findReportingManager(dynamoDb, approver); // 409 with a clear message when there is nobody above
+  }
+  if (request.approver.role === "HR_ADMIN") return { kind: "ROLE", role: "SUPER_ADMIN", label: "Admin", approverKey: `${request.orgId}#SUPER_ADMIN` };
+  return fail(409, "There is nobody above this approver to escalate to");
+>>>>>>> master
 };
 
 // What a final decision does to the original record (leave balance, expense status)
@@ -64,9 +87,16 @@ export const act = async (req, res) => {
     const requester = await getEmployee(dynamoDb, request.orgId, request.requesterId);
     const { approverKey, ...next } = await findApprover(dynamoDb, request.stages[request.currentStage], requester);
     changes = { set: { status: "PENDING", currentStage: request.currentStage + 1, approver: next, approverKey } };
+<<<<<<< HEAD
   } else if (action === "escalate") { // hand over to the next role up
     const role = request.approver.role === "HR_ADMIN" ? "SUPER_ADMIN" : "HR_ADMIN";
     changes = { set: { status: "ESCALATED", approver: { kind: "ROLE", role, label: role === "HR_ADMIN" ? "HR" : "Admin" }, approverKey: `${request.orgId}#${role}`, escalatedFrom: request.approver.label } };
+=======
+  } else if (action === "escalate") { // hand over one level up, never past the chain
+    const target = await escalationTarget(request);
+    const { approverKey, ...approver } = target;
+    changes = { set: { status: "ESCALATED", approver, approverKey, escalatedFrom: request.approver.label } };
+>>>>>>> master
   } else { // final decision
     finalStatus = action === "approve" ? "APPROVED" : "REJECTED";
     changes = { set: { status: finalStatus, orgStatus: `${request.orgId}#${finalStatus}`, completedAt: new Date().toISOString() }, remove: ["approverKey"] };
